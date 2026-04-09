@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geología — Estructura de la Tierra</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            tierra: {
+              bg: '#FAF6F0',
+              cream: '#F0E9DF',
+              sand: '#E6DDD1',
+              slate: '#4A5568',
+              charcoal: '#2C3639',
+            },
+            petrol: {
+              DEFAULT: '#1B4965',
+              light: '#2A6F97',
+              dark: '#143B52',
+            },
+            terracotta: {
+              DEFAULT: '#C1666B',
+              light: '#D4898D',
+              dark: '#A34E52',
+            },
+            ochre: {
+              DEFAULT: '#D4A373',
+              light: '#E2BF9A',
+              dark: '#B8854F',
+            },
+            volcanic: {
+              DEFAULT: '#E76F51',
+              light: '#F09A83',
+              dark: '#D4533A',
+            },
+            turquoise: {
+              DEFAULT: '#2A9D8F',
+              light: '#52B7AB',
+              dark: '#1F7A6F',
+            },
+          },
+          fontFamily: {
+            display: ['Fraunces', 'serif'],
+            body: ['"Source Serif 4"', 'serif'],
+          },
+        },
+      },
+    }
+  </script>
+
+  <!-- React -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background-color: #FAF6F0;
+      color: #2C3639;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Tab indicator animation */
+    .tab-active {
+      position: relative;
+    }
+    .tab-active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 15%;
+      width: 70%;
+      height: 3px;
+      border-radius: 2px;
+      background: #E76F51;
+      animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    /* Page transition */
+    .page-enter {
+      animation: fadeUp 0.35s ease-out;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D4A373; border-radius: 3px; }
+
+    /* Flashcard flip */
+    .flip-perspective { perspective: 1000px; }
+    .flip-card {
+      transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+      position: relative;
+    }
+    .flip-card.flipped { transform: rotateY(180deg); }
+    .flip-face {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      position: absolute;
+      inset: 0;
+    }
+    .flip-back {
+      transform: rotateY(180deg);
+    }
+
+    /* Card slide animation */
+    .card-slide-in {
+      animation: cardSlide 0.3s ease-out;
+    }
+    @keyframes cardSlide {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useCallback } = React;
+
+    // ─── Tab config ───
+    const TABS = [
+      { id: 'mapa',    label: 'Mapa Conceptual', icon: '🗺️', shortLabel: 'Mapa' },
+      { id: 'historia', label: 'La Historia',     icon: '📖', shortLabel: 'Historia' },
+      { id: 'fichas',  label: 'Fichas de Estudio', icon: '🃏', shortLabel: 'Fichas' },
+      { id: 'quiz',    label: 'Quiz',             icon: '🎯', shortLabel: 'Quiz' },
+    ];
+
+    // ─── Key term highlight helper ───
+    function K({ children }) {
+      return (
+        <span className="bg-ochre/15 text-ochre-dark px-1 py-0.5 rounded font-semibold">
+          {children}
+        </span>
+      );
+    }
+
+    // ─── Section divider ───
+    function Divider() {
+      return (
+        <div className="flex items-center justify-center gap-3 my-12 md:my-16">
+          <span className="block w-12 h-px bg-tierra-sand" />
+          <span className="text-ochre text-lg">◆</span>
+          <span className="block w-12 h-px bg-tierra-sand" />
+        </div>
+      );
+    }
+
+    // ─── La Historia ───
+    function Historia() {
+      return (
+        <article className="page-enter max-w-2xl mx-auto">
+          {/* Intro */}
+          <header className="mb-12 md:mb-16">
+            <p className="font-body text-sm uppercase tracking-widest text-terracotta mb-3">Unidad 1 · Resumen narrativo</p>
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-tierra-charcoal leading-tight mb-4">
+              La Tierra por dentro
+            </h2>
+            <p className="font-body text-lg text-tierra-slate leading-relaxed">
+              Todo el tema contado como si alguien te lo estuviera explicando. Sin formato apuntes, sin aburrimiento. Lee con calma — al terminar, lo tendrás mucho más claro.
+            </p>
+          </header>
+
+          {/* Sección 1 */}
+          <section>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold text-petrol mb-6 leading-snug">
+              1. La Tierra es como una cebolla<br className="hidden md:block" />
+              <span className="text-tierra-slate text-xl md:text-2xl font-normal">(pero más interesante)</span>
+            </h3>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              La Tierra es un <K>sistema</K>. ¿Qué significa eso? Que sus partes no van por libre — interactúan entre ellas y forman algo más complejo que la suma de las piezas. Y es un <K>sistema cerrado</K>: intercambia energía con el exterior (recibe radiación del Sol, emite calor), pero prácticamente no intercambia materia. Sí, caen meteoritos y salen naves espaciales, pero en la escala del planeta eso es despreciable.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Tiene cuatro grandes subsistemas que están constantemente influyéndose entre sí: la <K>geosfera</K> (la parte sólida), la <K>hidrosfera</K> (el agua), la <K>atmósfera</K> (los gases) y la <K>biosfera</K> (los seres vivos). ¿Qué mueve todo esto? Dos fuentes de energía: el Sol desde fuera y el calor interno de la Tierra desde dentro.
+            </p>
+          </section>
+
+          <Divider />
+
+          {/* Sección 2 */}
+          <section>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold text-petrol mb-6 leading-snug">
+              2. ¿Cómo sabemos lo que hay ahí abajo?
+            </h3>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Nadie ha viajado al centro de la Tierra (perdón, Julio Verne). Lo más profundo que hemos llegado con un sondeo son unos <K>12 km</K>, en el <K>Proyecto Mohole</K>. Y la Tierra tiene un radio de 6.371 km. Es como intentar conocer el interior de una sandía habiendo pinchado solo la cáscara.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Los <K>métodos directos</K> — minas (hasta 3 km), sondeos, volcanes que escupen material de las profundidades, y montañas donde afloran rocas originadas a profundidad — nos dan información real pero muy limitada. Solo llegamos a los primeros metros del manto.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-2">
+              Así que necesitamos <K>métodos indirectos</K>, que son como hacer de detective:
+            </p>
+            <ul className="font-body text-lg leading-relaxed space-y-3 pl-1 mb-4">
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>El <K>método gravimétrico</K> detecta anomalías en la gravedad. Si debajo de ti hay un yacimiento de mineral muy denso, la gravedad ahí será ligeramente mayor de lo esperado. Útil para encontrar yacimientos.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>La <K>temperatura</K> aumenta 3°C cada 100 metros de profundidad (gradiente geotérmico). Pero ojo: aunque en el núcleo las temperaturas son brutales, el material no está del todo fundido porque la presión es tan enorme que mantiene las cosas en estado sólido o semifundido.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>El <K>magnetismo terrestre</K> existe porque el núcleo externo (metálico y líquido) rota a distinta velocidad que el interno. Esto crea un campo magnético. Las variaciones locales (anomalías magnéticas) nos dicen si hay rocas ricas en hierro debajo.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>El <K>método eléctrico</K> mide la resistividad de las rocas usando electrodos. Muy preciso hasta 1.000 m, luego pierde fiabilidad. Perfecto para encontrar aguas subterráneas.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>Los <K>meteoritos</K> son como cápsulas del tiempo. Vienen del cinturón de asteroides y tienen una composición parecida a los planetesimales que formaron la Tierra, así que nos cuentan de qué está hecho el interior.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>Y el campeón indiscutible: el <K>método sísmico</K>. Es el que más información nos ha dado, y merece su propia sección.</span>
+              </li>
+            </ul>
+          </section>
+
+          <Divider />
+
+          {/* Sección 3 */}
+          <section>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold text-petrol mb-6 leading-snug">
+              3. Las ondas que lo cuentan todo
+            </h3>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Cuando hay un terremoto, en el punto donde se produce (el hipocentro o foco) se generan dos tipos de ondas que viajan por el interior de la Tierra:
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Las <K>ondas P</K> (primarias) son las más rápidas (6 a 13 km/s). Son longitudinales — las partículas vibran en la misma dirección en que viaja la onda, como un muelle que se comprime y se estira. Pueden atravesar cualquier medio: sólido, líquido, gas. Pero en los fluidos van más lentas.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Las <K>ondas S</K> (secundarias) son más lentas (3 a 8 km/s). Son transversales — las partículas vibran perpendiculares a la dirección de la onda, como cuando agitas una cuerda. El dato clave: <span className="font-bold text-terracotta-dark">NO se propagan por medios fluidos</span>. Si las ondas S desaparecen en algún punto, es que ahí hay algo líquido.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Estas ondas cambian de velocidad y dirección (se refractan) al pasar de un material a otro. Analizando esos cambios desde muchos sismógrafos repartidos por el mundo, hemos podido mapear el interior entero de la Tierra.
+            </p>
+
+            {/* Pull quote */}
+            <blockquote className="border-l-4 border-volcanic pl-5 py-2 my-8">
+              <p className="font-display text-xl md:text-2xl text-tierra-charcoal italic leading-snug">
+                Los puntos donde las ondas cambian bruscamente se llaman discontinuidades, y son las fronteras entre capas.
+              </p>
+            </blockquote>
+
+            <ul className="font-body text-lg leading-relaxed space-y-3 pl-1 mb-4">
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span><K>Mohorovicic (Moho)</K>: a 35-70 km en continentes, 8-10 km en océanos. Aquí P y S aceleran. Separa la corteza del manto.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span><K>Gutenberg</K>: a 2.900 km. Las P bajan velocidad y las S desaparecen por completo. Esto significa que pasamos a un medio líquido. Separa el manto del núcleo externo.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span><K>Lehman</K>: a 4.900-5.150 km. Las P aceleran de nuevo — volvemos a un medio sólido. Separa el núcleo externo del interno.</span>
+              </li>
+            </ul>
+          </section>
+
+          <Divider />
+
+          {/* Sección 4 */}
+          <section>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold text-petrol mb-6 leading-snug">
+              4. Las capas de la Tierra<br className="hidden md:block" />
+              <span className="text-tierra-slate text-xl md:text-2xl font-normal">— versión composición</span>
+            </h3>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Hay dos formas de dividir la Tierra en capas: por composición (modelo geoquímico) y por comportamiento mecánico (modelo geodinámico). Primero la composición.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              La <K>corteza</K> es la capa más externa y la más fina. Pero no toda la corteza es igual:
+            </p>
+            <ul className="font-body text-lg leading-relaxed space-y-3 pl-1 mb-4">
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>La <K>corteza continental</K> es gruesa (35-70 km), variada y vieja. Sus rocas más antiguas tienen 3.800 millones de años. Está hecha de materiales menos densos, tipo granito. Si la cortas en vertical, arriba encuentras rocas sedimentarias y volcánicas, en medio metamórficas con plutónicas ácidas (diorita), y abajo rocas muy metamorfizadas con ígneas básicas (gabro).</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>La <K>corteza oceánica</K> es delgada (8-10 km), homogénea y joven — nunca supera los 180 millones de años (ya veremos por qué). Más densa, tipo basalto. Tiene tres capas simples: sedimentos arriba, basaltos en medio, gabros abajo.</span>
+              </li>
+            </ul>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              El <K>manto</K> va desde la Moho hasta Gutenberg. Está hecho de <K>peridotitas</K>. Se divide en manto superior (con una zona de transición) y manto inferior. Mismo material, pero propiedades físicas diferentes según la profundidad.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              El <K>núcleo</K> es metálico: hierro y níquel, con algo de oxígeno y azufre.
+            </p>
+          </section>
+
+          <Divider />
+
+          {/* Sección 5 */}
+          <section>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold text-petrol mb-6 leading-snug">
+              5. Las capas de la Tierra<br className="hidden md:block" />
+              <span className="text-tierra-slate text-xl md:text-2xl font-normal">— versión dinámica</span>
+            </h3>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Este modelo no mira de qué están hechas las capas, sino cómo se comportan mecánicamente. Y es fundamental para entender la tectónica de placas.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              La <K>litosfera</K> es la capa rígida exterior: incluye toda la corteza más la parte superior del manto. Está fracturada en placas que se mueven. En los océanos llega hasta 50 km de profundidad; en los continentes, hasta 100-300 km.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              La <K>astenosfera</K> está justo debajo. Es sólida, pero tan cerca del punto de fusión que se comporta de forma plástica — se deforma lentamente. Las ondas sísmicas se ralentizan aquí. Sobre ella "flotan" las placas litosféricas.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              La <K>mesosfera</K> llega hasta 2.900 km (es el manto inferior). Aquí se forman las células de convección: material caliente sube desde la frontera con el núcleo y material frío baja en las zonas de subducción. También están las plumas del manto — chorros de material caliente que suben.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              La <K>capa D</K> está en la base del manto, justo sobre el núcleo. Es heterogénea y ahí nacen los penachos térmicos.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              La <K>endosfera</K> es el núcleo: externo (fundido) e interno (sólido). El núcleo externo gira a distinta velocidad que el interno, y ese giro diferencial genera el campo magnético terrestre.
+            </p>
+          </section>
+
+          <Divider />
+
+          {/* Sección 6 */}
+          <section>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold text-petrol mb-6 leading-snug">
+              6. Las pruebas del gran movimiento
+            </h3>
+
+            <blockquote className="border-l-4 border-terracotta pl-5 py-2 my-8">
+              <p className="font-display text-xl md:text-2xl text-tierra-charcoal italic leading-snug">
+                En 1912, Alfred Wegener propuso que los continentes se mueven. Le dijeron que estaba loco. Tenía razón.
+              </p>
+            </blockquote>
+
+            <p className="font-body text-lg leading-relaxed mb-2">
+              Sus pruebas de la <K>deriva continental</K>:
+            </p>
+            <ul className="font-body text-lg leading-relaxed space-y-3 pl-1 mb-4">
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span><strong>Geológicas</strong>: si juntas Sudamérica y África, las estructuras geológicas (cratones, cinturones montañosos) encajan como piezas de puzle.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span><strong>Paleontológicas</strong>: los mismos fósiles aparecen en continentes que hoy están separados por océanos enteros. Los bichos no cruzaron nadando.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span><strong>Paleoclimáticas</strong>: se encuentran <K>tillitas</K> (rocas glaciares) en regiones que hoy son tropicales. Esas rocas se formaron cuando esos continentes estaban en latitudes polares.</span>
+              </li>
+            </ul>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Wegener propuso que todos formaban un supercontinente, <K>Pangea</K>, que se fragmentó.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              El problema de Wegener: no supo explicar QUÉ movía los continentes. Eso lo resolvió <K>Arthur Holmes en 1929</K> con las <K>corrientes de convección</K> del manto.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-2">
+              Las pruebas definitivas vinieron del estudio de los fondos oceánicos (gracias al sonar) y del magnetismo natural de las rocas:
+            </p>
+            <ul className="font-body text-lg leading-relaxed space-y-3 pl-1 mb-4">
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>Se descubrieron <K>dorsales oceánicas</K> (cordilleras submarinas) y <K>fosas oceánicas</K>, y que los volcanes y terremotos se concentran en esos bordes.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>Los minerales de hierro en las rocas se imantan cuando el magma se solidifica, quedando "congelada" la orientación del campo magnético de ese momento. Al medir esto en rocas de distintas edades y continentes, se obtienen <K>curvas de deriva polar</K> que no coinciden entre sí → los continentes se mueven.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-volcanic mt-1 shrink-0">▸</span>
+                <span>En el fondo oceánico, las <K>anomalías magnéticas</K> forman bandas simétricas a ambos lados de las dorsales → el fondo se está expandiendo desde las dorsales.</span>
+              </li>
+            </ul>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              <K>Harry Hess (1960)</K> propuso la <K>expansión del fondo oceánico</K>: la corteza se crea en las dorsales, se separa, y se destruye en las zonas de subducción. Por eso la corteza oceánica nunca tiene más de 200 millones de años — está en constante reciclaje.
+            </p>
+          </section>
+
+          <Divider />
+
+          {/* Sección 7 */}
+          <section>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold text-petrol mb-6 leading-snug">
+              7. Las placas y sus choques
+            </h3>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Las <K>placas litosféricas</K> son fragmentos de litosfera de tamaño muy variable que encajan como un puzle gigante. La mayoría son mixtas (tienen parte continental y oceánica). Hay 8 grandes y varias menores. Dato: la placa del Pacífico es solo oceánica, la Arábiga es solo continental.
+            </p>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              Se mueven flotando sobre la astenosfera plástica, y donde se encuentran (los bordes) es donde pasa la acción geológica.
+            </p>
+
+            <h4 className="font-display text-xl font-semibold text-terracotta-dark mt-8 mb-4">Tres tipos de bordes:</h4>
+
+            <div className="space-y-6 mb-4">
+              <div className="bg-tierra-cream/60 rounded-xl p-5 md:p-6">
+                <h5 className="font-display text-lg font-semibold text-petrol mb-2">1. Bordes pasivos (fallas transformantes)</h5>
+                <p className="font-body text-base leading-relaxed">
+                  Las placas se deslizan lateralmente una junto a otra. No se crea ni se destruye litosfera, pero el rozamiento genera terremotos. Ejemplo clásico: la <K>Falla de San Andrés</K>.
+                </p>
+              </div>
+
+              <div className="bg-tierra-cream/60 rounded-xl p-5 md:p-6">
+                <h5 className="font-display text-lg font-semibold text-petrol mb-2">2. Bordes constructivos (dorsales)</h5>
+                <p className="font-body text-base leading-relaxed">
+                  Las placas se separan. El magma sube por la grieta, se solidifica y forma nueva corteza oceánica. Hay vulcanismo poco explosivo (magma basáltico muy fluido) y terremotos superficiales poco intensos. Las dorsales son cordilleras submarinas de unos 3 km de altura y 60.000 km de longitud total — una por océano.
+                </p>
+              </div>
+
+              <div className="bg-tierra-cream/60 rounded-xl p-5 md:p-6">
+                <h5 className="font-display text-lg font-semibold text-petrol mb-2">3. Bordes destructivos (subducción y colisión)</h5>
+                <p className="font-body text-base leading-relaxed mb-3">Las placas chocan. Tres variantes:</p>
+                <ul className="font-body text-base leading-relaxed space-y-2 pl-1">
+                  <li className="flex gap-3">
+                    <span className="text-terracotta mt-1 shrink-0">▹</span>
+                    <span><strong>Oceánica bajo continental</strong>: La oceánica (más densa y delgada) se mete debajo. Se forma una fosa oceánica, terremotos intensos que siguen un plano inclinado (<K>plano de Benioff</K>), actividad volcánica, y cordilleras (como los Andes).</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="text-terracotta mt-1 shrink-0">▹</span>
+                    <span><strong>Oceánica bajo oceánica</strong>: Una subduce bajo la otra, formando una fosa y un arco de islas volcánicas (como Japón).</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="text-terracotta mt-1 shrink-0">▹</span>
+                    <span><strong>Continental contra continental</strong>: Ninguna subduce fácilmente (ambas son poco densas). Se forma una cordillera enorme por compresión (como el Himalaya). Hay sismicidad pero <span className="font-bold text-terracotta-dark">NO vulcanismo</span>.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <Divider />
+
+          {/* Sección 8 */}
+          <section>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold text-petrol mb-6 leading-snug">
+              8. ¿Qué mueve todo esto?
+            </h3>
+            <p className="font-body text-lg leading-relaxed mb-4">
+              El motor tiene dos componentes:
+            </p>
+
+            <div className="space-y-6 mb-4">
+              <div className="bg-tierra-cream/60 rounded-xl p-5 md:p-6">
+                <h5 className="font-display text-lg font-semibold text-volcanic-dark mb-2">🌡️ Temperatura</h5>
+                <p className="font-body text-base leading-relaxed">
+                  El interior de la Tierra está caliente (calor residual + desintegración radiactiva). Ese calor se transmite por <K>convección</K>: material caliente sube desde la capa D hasta la base de la litosfera en columnas ascendentes, y material frío baja en las zonas de subducción. Son las <K>células de convección</K> del manto.
+                </p>
+              </div>
+
+              <div className="bg-tierra-cream/60 rounded-xl p-5 md:p-6">
+                <h5 className="font-display text-lg font-semibold text-volcanic-dark mb-2">🪨 Gravedad</h5>
+                <p className="font-body text-base leading-relaxed">
+                  Cuando la litosfera oceánica se enfría y se vuelve más densa que el material de debajo, se hunde. Al hacerlo, tira del resto de la placa como si fuera una manta que se cae de la cama (<K>slab pull</K>). Además, desde las dorsales hay un empuje lateral: la nueva corteza "empuja" la vieja hacia los lados (<K>ridge push</K>).
+                </p>
+              </div>
+            </div>
+
+            {/* Closing pull quote */}
+            <blockquote className="border-l-4 border-turquoise pl-5 py-2 my-8">
+              <p className="font-display text-xl md:text-2xl text-tierra-charcoal italic leading-snug">
+                La corteza oceánica se recicla constantemente: nace en las dorsales y se destruye al subducir bajo otra placa. Por eso nunca supera los 200 millones de años.
+              </p>
+            </blockquote>
+          </section>
+
+          {/* End marker */}
+          <div className="flex items-center justify-center gap-3 mt-16 mb-8">
+            <span className="block w-8 h-px bg-tierra-sand" />
+            <span className="text-tierra-slate text-xs font-body tracking-widest uppercase">Fin del resumen</span>
+            <span className="block w-8 h-px bg-tierra-sand" />
+          </div>
+        </article>
+      );
+    }
+
+    // ─── Fichas de Estudio ───
+    const FICHAS = [
+      { p: '¿Qué tipo de sistema es la Tierra y qué implica?', r: 'Sistema cerrado. Intercambia energía con el exterior pero no materia (despreciando meteoritos y naves).' },
+      { p: '¿Cuáles son los 4 subsistemas de la Tierra?', r: 'Geosfera, hidrosfera, atmósfera y biosfera.' },
+      { p: '¿Cuáles son las dos fuentes de energía que mueven los subsistemas terrestres?', r: 'La energía solar (externa) y el calor interno de la Tierra.' },
+      { p: '¿Cuál es la profundidad máxima alcanzada por un sondeo geológico?', r: '12 km (Proyecto Mohole).' },
+      { p: '¿Por qué los volcanes son un método directo de estudio del interior terrestre?', r: 'Porque expulsan materiales que proceden de zonas profundas de la Tierra.' },
+      { p: '¿Qué limitación tienen TODOS los métodos directos?', r: 'Solo tienen acceso a los primeros metros del manto.' },
+      { p: '¿Qué estudia el método gravimétrico?', r: 'Las anomalías (diferencias entre valores teóricos y reales) en la aceleración de la gravedad, útiles para localizar yacimientos minerales.' },
+      { p: '¿Qué tres factores producen cambios en la aceleración de la gravedad?', r: '1) El valor del radio terrestre (latitud), 2) la altitud, y 3) la masa de los materiales bajo el punto de observación.' },
+      { p: '¿Qué es el gradiente geotérmico y cuál es su valor?', r: 'Es el aumento de temperatura con la profundidad: 3°C por cada 100 metros.' },
+      { p: '¿Por qué el material del interior terrestre no está fundido a pesar de las altas temperaturas?', r: 'Porque la presión es tan elevada que mantiene los materiales en estado sólido o semifundido.' },
+      { p: '¿Por qué la Tierra tiene campo magnético?', r: 'Porque el núcleo externo (metálico y líquido) rota a distinta velocidad que el núcleo interno (metálico y sólido).' },
+      { p: '¿Para qué sirve el método eléctrico y cuál es su limitación?', r: 'Sirve para localizar yacimientos metálicos y aguas subterráneas (midiendo la resistividad eléctrica). Pierde precisión a partir de 1.000 metros.' },
+      { p: '¿Por qué los meteoritos nos informan sobre el interior terrestre?', r: 'Porque son planetesimales que no formaron un planeta y tienen composición similar a los que originaron la Tierra.' },
+      { p: '¿Por qué el método sísmico es el más importante de los métodos indirectos?', r: 'Porque es el que más datos ha aportado sobre la estructura interna y la composición del planeta, al estudiar cómo se propagan las ondas sísmicas.' },
+      { p: 'Diferencia entre ondas P y ondas S (velocidad, tipo de vibración, propagación).', r: 'P: 6-13 km/s, longitudinales, atraviesan cualquier medio (más lentas en fluidos). S: 3-8 km/s, transversales, NO se propagan en medios fluidos.' },
+      { p: '¿Qué son las discontinuidades sísmicas?', r: 'Zonas donde las ondas sísmicas se reflejan y refractan, indicando cambios de composición o estado físico entre capas.' },
+      { p: '¿A qué profundidad está la discontinuidad de Mohorovicic y qué separa?', r: '35-70 km (continentes) y 8-10 km (océanos). Separa la corteza del manto. Las ondas P y S aumentan su velocidad.' },
+      { p: '¿A qué profundidad está la discontinuidad de Gutenberg y qué separa?', r: '2.900 km. Separa el manto del núcleo externo. Las P disminuyen velocidad y las S dejan de transmitirse (medio líquido).' },
+      { p: '¿A qué profundidad está la discontinuidad de Lehman y qué separa?', r: '4.900-5.150 km. Separa el núcleo externo del interno. Las P aumentan velocidad (medio sólido).' },
+      { p: '¿Cómo sabemos que el núcleo externo es líquido?', r: 'Porque las ondas S (que no se propagan en fluidos) desaparecen al llegar a la discontinuidad de Gutenberg (2.900 km).' },
+      { p: 'Diferencias entre corteza continental y oceánica (al menos 4).', r: 'Continental: 35-70 km, heterogénea, rocas hasta 3.800 Ma, menos densa (tipo granito). Oceánica: 8-10 km, homogénea, rocas hasta 180 Ma, más densa (tipo basalto).' },
+      { p: '¿Cuáles son las tres capas verticales de la corteza continental (de arriba a abajo)?', r: '1) Rocas sedimentarias, volcánicas y plutónicas ácidas (granito). 2) Metamorfismo intermedio e ígneas intermedias (diorita). 3) Rocas muy metamorfizadas e ígneas básicas (gabro).' },
+      { p: '¿Cuáles son las tres capas de la corteza oceánica?', r: '1) Capa de sedimentos. 2) Capa de basaltos (solidificados en dorsales). 3) Gabros (composición similar al basalto pero solidificación más lenta).' },
+      { p: '¿De qué material está formado el manto?', r: 'Peridotitas.' },
+      { p: '¿Qué composición tiene el núcleo?', r: 'Metálico: hierro, níquel, oxígeno y azufre.' },
+      { p: '¿Qué es la litosfera y qué incluye?', r: 'Capa rígida más superficial que comprende la corteza y el manto superior. Está fracturada en placas litosféricas. 50 km en océanos, 100-300 km en continentes.' },
+      { p: '¿Qué es la astenosfera y por qué es importante?', r: 'Capa sólida próxima al punto de fusión (plástica). Sobre ella "flotan" y se desplazan las placas litosféricas. Las ondas sísmicas reducen su velocidad al atravesarla.' },
+      { p: '¿Qué ocurre en la mesosfera?', r: 'Se forman células convectivas: material caliente asciende desde el límite con el núcleo y fragmentos de litosfera fría descienden en zonas de subducción. Contiene plumas del manto.' },
+      { p: '¿Qué genera el campo magnético terrestre según el modelo geodinámico?', r: 'El giro diferencial del núcleo externo (líquido) respecto al interno (sólido) en la endosfera.' },
+      { p: '¿Quién propuso la deriva continental y en qué año?', r: 'Alfred Wegener en 1912.' },
+      { p: 'Nombra los tres tipos de pruebas de la deriva continental.', r: 'Geológicas (estructuras coinciden a ambos lados del Atlántico), paleontológicas (mismos fósiles en continentes separados) y paleoclimáticas (tillitas en zonas hoy tropicales).' },
+      { p: '¿Qué es Pangea?', r: 'El supercontinente que según Wegener reunía todos los continentes antes de su fragmentación.' },
+      { p: '¿Qué mecanismo propuso Holmes (1929) para explicar el movimiento de las placas?', r: 'Las corrientes de convección térmica en el manto.' },
+      { p: '¿Cómo demuestra el paleomagnetismo que los continentes se mueven?', r: 'Las curvas de deriva polar obtenidas en distintos continentes no coinciden entre sí, lo que indica que los continentes han cambiado de posición.' },
+      { p: '¿Qué evidencia del fondo oceánico apoya la expansión?', r: 'Las anomalías magnéticas forman bandas paralelas y simétricas a ambos lados de las dorsales → la corteza se forma en la dorsal y se separa.' },
+      { p: '¿Por qué la corteza oceánica nunca supera los 200 Ma de antigüedad?', r: 'Porque se crea continuamente en las dorsales y se destruye en las zonas de subducción. Está en constante reciclaje.' },
+      { p: '¿Qué son los bordes pasivos y qué ejemplo famoso hay?', r: 'Zonas donde las placas se deslizan lateralmente (esfuerzos de cizalla). No se crea ni destruye litosfera, pero hay sismicidad por rozamiento. Son las fallas transformantes (ej: San Andrés).' },
+      { p: '¿Qué ocurre en un borde constructivo?', r: 'Las placas se separan (esfuerzos de tensión), el magma asciende y solidifica formando nueva corteza oceánica. Se dan en las dorsales oceánicas. Vulcanismo poco explosivo, sismicidad superficial.' },
+      { p: 'Describe los tres tipos de bordes destructivos y sus resultados.', r: '1) Oceánica bajo continental: fosa, sismicidad (plano de Benioff), vulcanismo, cordilleras (Andes). 2) Oceánica bajo oceánica: fosa + arco de islas (Japón). 3) Continental vs continental: cordillera sin vulcanismo (Himalaya).' },
+      { p: '¿Cuáles son las dos fuerzas que mueven las placas y cómo actúan?', r: '1) Temperatura: convección del manto (columnas calientes suben, frías bajan). 2) Gravedad: la litosfera oceánica densa tira de la placa al hundirse (slab pull) y la nueva corteza empuja desde las dorsales (ridge push).' },
+    ];
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function Fichas() {
+      const [cards, setCards] = useState(() => shuffle(FICHAS));
+      const [index, setIndex] = useState(0);
+      const [flipped, setFlipped] = useState(false);
+      const [results, setResults] = useState([]); // { idx, knew }
+      const [phase, setPhase] = useState('study'); // 'study' | 'summary' | 'review'
+      const [slideKey, setSlideKey] = useState(0);
+
+      const current = cards[index];
+      const total = cards.length;
+      const knew = results.filter(r => r.knew).length;
+      const missed = results.filter(r => !r.knew).length;
+
+      function answer(knew) {
+        setResults(prev => [...prev, { idx: index, knew }]);
+        setFlipped(false);
+        if (index + 1 < total) {
+          setTimeout(() => {
+            setIndex(index + 1);
+            setSlideKey(k => k + 1);
+          }, 200);
+        } else {
+          setTimeout(() => setPhase('summary'), 300);
+        }
+      }
+
+      function restart(onlyMissed) {
+        if (onlyMissed) {
+          const missedCards = results.filter(r => !r.knew).map(r => cards[r.idx]);
+          setCards(shuffle(missedCards));
+          setPhase('review');
+        } else {
+          setCards(shuffle(FICHAS));
+          setPhase('study');
+        }
+        setIndex(0);
+        setFlipped(false);
+        setResults([]);
+        setSlideKey(k => k + 1);
+      }
+
+      // ─── Summary screen ───
+      if (phase === 'summary') {
+        const pct = Math.round((knew / total) * 100);
+        let msg, msgColor;
+        if (pct === 100) { msg = '¡Perfecto! Lo tienes dominado.'; msgColor = 'text-turquoise-dark'; }
+        else if (pct >= 75) { msg = '¡Muy bien! Solo unos pocos fallos.'; msgColor = 'text-turquoise'; }
+        else if (pct >= 50) { msg = 'Vas por buen camino. Repasa las que fallaste.'; msgColor = 'text-ochre-dark'; }
+        else { msg = 'Toca repasar un poco más. ¡Tú puedes!'; msgColor = 'text-terracotta'; }
+
+        return (
+          <div className="page-enter max-w-md mx-auto text-center">
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-tierra-charcoal mb-2">Resultado</h2>
+            <p className="font-body text-tierra-slate mb-8">{phase === 'review' ? 'Repaso de falladas' : `${total} fichas completadas`}</p>
+
+            <div className="flex justify-center gap-8 mb-6">
+              <div>
+                <span className="block font-display text-4xl font-bold text-turquoise">{knew}</span>
+                <span className="font-body text-sm text-tierra-slate">Sabía</span>
+              </div>
+              <div>
+                <span className="block font-display text-4xl font-bold text-terracotta">{missed}</span>
+                <span className="font-body text-sm text-tierra-slate">No sabía</span>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full h-3 bg-tierra-sand rounded-full overflow-hidden mb-4">
+              <div className="h-full bg-turquoise rounded-full transition-all" style={{ width: `${pct}%` }} />
+            </div>
+            <p className={`font-display text-lg font-semibold ${msgColor} mb-8`}>{msg}</p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              {missed > 0 && (
+                <button
+                  onClick={() => restart(true)}
+                  className="px-6 py-3 bg-terracotta text-white font-body font-semibold rounded-xl hover:bg-terracotta-dark transition-colors cursor-pointer"
+                >
+                  Repasar las {missed} falladas
+                </button>
+              )}
+              <button
+                onClick={() => restart(false)}
+                className="px-6 py-3 bg-tierra-cream text-tierra-charcoal font-body font-semibold rounded-xl hover:bg-tierra-sand transition-colors cursor-pointer"
+              >
+                Empezar de nuevo
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      // ─── Card screen ───
+      return (
+        <div className="page-enter max-w-lg mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-tierra-charcoal">
+                {phase === 'review' ? 'Repaso' : 'Fichas de Estudio'}
+              </h2>
+              <p className="font-body text-sm text-tierra-slate mt-1">
+                Intenta responder antes de voltear
+              </p>
+            </div>
+            <span className="font-display text-lg font-semibold text-ochre-dark">
+              {index + 1}<span className="text-tierra-slate/50">/{total}</span>
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full h-1.5 bg-tierra-sand rounded-full overflow-hidden mb-6">
+            <div
+              className="h-full bg-ochre rounded-full transition-all duration-300"
+              style={{ width: `${((index) / total) * 100}%` }}
+            />
+          </div>
+
+          {/* Card */}
+          <div className="flip-perspective" key={slideKey}>
+            <div
+              className={`flip-card card-slide-in w-full h-72 md:h-80 cursor-pointer ${flipped ? 'flipped' : ''}`}
+              onClick={() => setFlipped(!flipped)}
+            >
+              {/* Front */}
+              <div className="flip-face w-full h-full bg-white rounded-2xl border border-tierra-sand p-6 md:p-8 flex flex-col justify-center items-center text-center shadow-sm">
+                <span className="text-xs uppercase tracking-widest text-ochre font-body mb-4">Pregunta</span>
+                <p className="font-body text-lg md:text-xl text-tierra-charcoal leading-relaxed">
+                  {current.p}
+                </p>
+                <span className="mt-auto text-xs text-tierra-slate/40 font-body">Toca para voltear</span>
+              </div>
+
+              {/* Back */}
+              <div className="flip-face flip-back w-full h-full bg-petrol rounded-2xl p-6 md:p-8 flex flex-col justify-center items-center text-center shadow-sm">
+                <span className="text-xs uppercase tracking-widest text-turquoise-light font-body mb-4">Respuesta</span>
+                <p className="font-body text-lg md:text-xl text-white/95 leading-relaxed">
+                  {current.r}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className={`flex gap-3 mt-6 transition-opacity duration-300 ${flipped ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+            <button
+              onClick={() => answer(false)}
+              className="flex-1 py-3.5 bg-terracotta/10 text-terracotta-dark font-body font-semibold rounded-xl hover:bg-terracotta/20 transition-colors cursor-pointer"
+            >
+              No lo sabía ✗
+            </button>
+            <button
+              onClick={() => answer(true)}
+              className="flex-1 py-3.5 bg-turquoise/10 text-turquoise-dark font-body font-semibold rounded-xl hover:bg-turquoise/20 transition-colors cursor-pointer"
+            >
+              Lo sabía ✓
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── Placeholder pages ───
+    function PlaceholderPage({ tab }) {
+      const colors = {
+        mapa: 'petrol',
+        historia: 'terracotta',
+        fichas: 'ochre',
+        quiz: 'turquoise',
+      };
+      const descriptions = {
+        mapa: 'Visualiza todos los conceptos y sus conexiones de un vistazo.',
+        historia: 'El tema entero contado como una historia, no como un apunte.',
+        fichas: '40 tarjetas para poner a prueba tu memoria.',
+        quiz: '20 preguntas tipo examen con feedback inmediato.',
+      };
+      const tabData = TABS.find(t => t.id === tab);
+
+      return (
+        <div className="page-enter flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+          <span className="text-6xl mb-6">{tabData.icon}</span>
+          <h2 className="font-display text-3xl md:text-4xl font-semibold text-tierra-charcoal mb-3">
+            {tabData.label}
+          </h2>
+          <p className="font-body text-lg text-tierra-slate max-w-md leading-relaxed">
+            {descriptions[tab]}
+          </p>
+          <div className={`mt-8 px-6 py-3 rounded-full bg-${colors[tab]}/10 text-${colors[tab]}-dark font-body text-sm font-medium`}>
+            Próximamente
+          </div>
+        </div>
+      );
+    }
+
+    // ─── Main App ───
+    function App() {
+      const [activeTab, setActiveTab] = useState('historia');
+
+      const renderPage = useCallback(() => {
+        switch (activeTab) {
+          case 'mapa':     return <PlaceholderPage tab="mapa" />;
+          case 'historia': return <Historia />;
+          case 'fichas':   return <Fichas />;
+          case 'quiz':     return <PlaceholderPage tab="quiz" />;
+          default:         return null;
+        }
+      }, [activeTab]);
+
+      return (
+        <div className="min-h-screen bg-tierra-bg font-body">
+          {/* ── Header ── */}
+          <header className="sticky top-0 z-50 bg-tierra-bg/95 backdrop-blur-sm border-b border-tierra-sand">
+            <div className="max-w-4xl mx-auto px-4">
+              {/* Title bar */}
+              <div className="flex items-baseline gap-3 pt-4 pb-2">
+                <h1 className="font-display text-xl md:text-2xl font-bold text-tierra-charcoal tracking-tight">
+                  Geología
+                </h1>
+                <span className="font-body text-sm text-tierra-slate hidden sm:inline">
+                  Unidad 1 · Estructura de la Tierra
+                </span>
+                <span className="font-body text-xs text-tierra-slate sm:hidden">
+                  Unidad 1
+                </span>
+              </div>
+
+              {/* Tab navigation */}
+              <nav className="flex gap-1" role="tablist">
+                {TABS.map(tab => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`
+                        flex-1 flex items-center justify-center gap-1.5
+                        py-2.5 px-2 text-sm font-medium rounded-t-lg
+                        transition-colors duration-200 cursor-pointer
+                        ${isActive
+                          ? 'text-volcanic-dark tab-active'
+                          : 'text-tierra-slate hover:text-tierra-charcoal hover:bg-tierra-cream/50'
+                        }
+                      `}
+                    >
+                      <span className="text-base leading-none">{tab.icon}</span>
+                      <span className="hidden sm:inline font-body">{tab.label}</span>
+                      <span className="sm:hidden font-body text-xs">{tab.shortLabel}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          </header>
+
+          {/* ── Content ── */}
+          <main className="max-w-4xl mx-auto px-4 py-8 md:py-12" key={activeTab}>
+            {renderPage()}
+          </main>
+
+          {/* ── Footer ── */}
+          <footer className="border-t border-tierra-sand py-6 mt-12">
+            <p className="text-center font-body text-xs text-tierra-slate/60">
+              1º Bachillerato · Geología · Tectónica de Placas
+            </p>
+          </footer>
+        </div>
+      );
+    }
+
+    // ─── Mount ───
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
