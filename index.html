@@ -716,6 +716,202 @@
       );
     }
 
+    // ─── Quiz Interactivo ───
+    const QUIZ_RAW = [
+      { q: '¿Qué tipo de sistema es la Tierra?', opts: ['Abierto', 'Cerrado', 'Aislado', 'Semiabierto'], correct: 1, exp: 'La Tierra intercambia energía con el exterior (radiación solar) pero no materia de forma significativa.' },
+      { q: '¿Cuál de estos NO es un método directo de estudio del interior terrestre?', opts: ['Volcanes', 'Sondeos geológicos', 'Método gravimétrico', 'Minas y simas'], correct: 2, exp: 'El método gravimétrico es indirecto — se basa en cálculos sobre anomalías de la gravedad, no en observación directa.' },
+      { q: '¿Cuál es el valor del gradiente geotérmico?', opts: ['1°C cada 100 m', '3°C cada 100 m', '5°C cada 100 m', '3°C cada 1.000 m'], correct: 1, exp: 'La temperatura aumenta 3°C por cada 100 metros de profundidad.' },
+      { q: '¿Qué tipo de ondas sísmicas NO se propagan por medios fluidos?', opts: ['Ondas P', 'Ondas S', 'Ambas se propagan por fluidos', 'Ninguna se propaga por fluidos'], correct: 1, exp: 'Las ondas S son transversales y no pueden transmitirse en medios fluidos. Las P sí, aunque más lentamente.' },
+      { q: '¿Qué discontinuidad separa la corteza del manto?', opts: ['Gutenberg', 'Lehman', 'Mohorovicic', 'Conrad'], correct: 2, exp: 'La discontinuidad de Mohorovicic (Moho) se encuentra a 35-70 km en continentes y 8-10 km en océanos.' },
+      { q: '¿Cómo sabemos que el núcleo externo es líquido?', opts: ['Porque las ondas P desaparecen', 'Porque las ondas S desaparecen en la discontinuidad de Gutenberg', 'Porque la temperatura es demasiado alta', 'Por el estudio de meteoritos'], correct: 1, exp: 'Las ondas S no se propagan en fluidos. Al llegar a 2.900 km (Gutenberg) desaparecen, indicando un medio líquido.' },
+      { q: '¿Cuál es la roca principal del manto?', opts: ['Granito', 'Basalto', 'Peridotita', 'Gabro'], correct: 2, exp: 'El manto está formado básicamente de peridotitas, tanto en el manto superior como en el inferior.' },
+      { q: 'La corteza oceánica es más _____ y más _____ que la continental.', opts: ['Gruesa y antigua', 'Delgada y joven', 'Delgada y antigua', 'Gruesa y joven'], correct: 1, exp: 'La oceánica tiene 8-10 km (vs 35-70 km) y nunca supera 180 Ma (vs 3.800 Ma).' },
+      { q: '¿Qué capa del modelo geodinámico es rígida y está fracturada en placas?', opts: ['Astenosfera', 'Mesosfera', 'Litosfera', 'Endosfera'], correct: 2, exp: 'La litosfera (corteza + manto superior) es rígida y está dividida en placas litosféricas que se mueven sobre la astenosfera.' },
+      { q: '¿Sobre qué capa "flotan" las placas litosféricas?', opts: ['Mesosfera', 'Endosfera', 'Capa D', 'Astenosfera'], correct: 3, exp: 'La astenosfera es sólida pero plástica (próxima al punto de fusión), permitiendo que las placas se desplacen sobre ella.' },
+      { q: '¿Quién propuso la deriva continental?', opts: ['Holmes', 'Hess', 'Wegener', 'Lehman'], correct: 2, exp: 'Alfred Wegener propuso en 1912 que los continentes se habían movido desde un supercontinente llamado Pangea.' },
+      { q: '¿Qué son las tillitas y qué prueban?', opts: ['Fósiles marinos que prueban la existencia de océanos antiguos', 'Rocas volcánicas que prueban la actividad magmática pasada', 'Rocas de origen glaciar que prueban que los continentes estuvieron en otras latitudes', 'Minerales magnéticos que prueban la inversión de los polos'], correct: 2, exp: 'Las tillitas son rocas glaciares encontradas en regiones hoy tropicales, evidencia paleoclimática de la deriva continental.' },
+      { q: '¿Qué demuestran las bandas magnéticas simétricas a ambos lados de las dorsales?', opts: ['Que los polos magnéticos cambian', 'Que el fondo oceánico se expande desde las dorsales', 'Que los continentes se hunden', 'Que el manto es homogéneo'], correct: 1, exp: 'Las bandas simétricas muestran que la corteza se forma en la dorsal y se separa hacia ambos lados, registrando las inversiones del campo magnético.' },
+      { q: '¿En qué tipo de borde se crea nueva litosfera?', opts: ['Bordes destructivos', 'Bordes pasivos', 'Bordes constructivos', 'Zonas de subducción'], correct: 2, exp: 'En los bordes constructivos (dorsales oceánicas) el magma asciende y forma nueva corteza oceánica al solidificarse.' },
+      { q: '¿Qué ocurre cuando chocan dos placas continentales?', opts: ['Una subduce bajo la otra', 'Se forma una fosa oceánica', 'Se forma una gran cordillera con sismicidad pero sin vulcanismo', 'Se forma un arco de islas'], correct: 2, exp: 'Ambas son poco densas para subducir, así que se comprimen formando cordilleras como el Himalaya. Hay terremotos pero no volcanes.' },
+      { q: '¿Qué es el plano de Benioff?', opts: ['La superficie de una dorsal oceánica', 'El plano inclinado donde se localizan los terremotos en una zona de subducción', 'La frontera entre el manto superior e inferior', 'El límite entre la litosfera y la astenosfera'], correct: 1, exp: 'En las zonas de subducción, los terremotos se distribuyen a lo largo de un plano inclinado que sigue la placa que se hunde.' },
+      { q: '¿Qué tipo de placa es la placa del Pacífico?', opts: ['Continental', 'Mixta', 'Oceánica', 'Subducida'], correct: 2, exp: 'La placa del Pacífico es solo oceánica. La mayoría de las demás son mixtas.' },
+      { q: '¿Cuál es la diferencia entre el modelo geoquímico y el geodinámico?', opts: ['El geoquímico clasifica por estado físico, el geodinámico por composición', 'El geoquímico clasifica por composición, el geodinámico por comportamiento mecánico', 'Son dos nombres para el mismo modelo', 'El geodinámico solo estudia el núcleo'], correct: 1, exp: 'El geoquímico divide en corteza/manto/núcleo (composición). El geodinámico divide en litosfera/astenosfera/mesosfera/endosfera (comportamiento mecánico).' },
+      { q: '¿Qué mecanismo principal mueve las placas litosféricas?', opts: ['Solo la rotación de la Tierra', 'La atracción lunar', 'Convección del manto + gravedad (slab pull y ridge push)', 'Solo el viento solar'], correct: 2, exp: 'Las células de convección del manto y la fuerza gravitatoria (tirón de la placa que subduce + empuje desde las dorsales) son los dos motores.' },
+      { q: '¿Por qué la corteza oceánica nunca supera los 200 millones de años?', opts: ['Porque se funde por el calor del Sol', 'Porque se erosiona con el agua del mar', 'Porque se crea en las dorsales y se destruye en las zonas de subducción', 'Porque los meteoritos la destruyen periódicamente'], correct: 2, exp: 'La corteza oceánica se recicla constantemente: nace en las dorsales y se destruye al subducir bajo otra placa.' },
+    ];
+
+    function Quiz() {
+      const [questions, setQuestions] = useState(() => {
+        return shuffle(QUIZ_RAW).map(q => {
+          // Shuffle options, tracking correct answer
+          const indices = q.opts.map((_, i) => i);
+          const shuffled = shuffle(indices);
+          return {
+            ...q,
+            shuffledOpts: shuffled.map(i => q.opts[i]),
+            correctShuffled: shuffled.indexOf(q.correct),
+          };
+        });
+      });
+      const [index, setIndex] = useState(0);
+      const [selected, setSelected] = useState(null);
+      const [score, setScore] = useState(0);
+      const [phase, setPhase] = useState('playing'); // 'playing' | 'result'
+
+      const current = questions[index];
+      const total = questions.length;
+      const answered = selected !== null;
+      const isCorrect = selected === current.correctShuffled;
+
+      function selectOption(i) {
+        if (answered) return;
+        setSelected(i);
+        if (i === current.correctShuffled) setScore(s => s + 1);
+      }
+
+      function next() {
+        if (index + 1 < total) {
+          setIndex(index + 1);
+          setSelected(null);
+        } else {
+          setPhase('result');
+        }
+      }
+
+      function restart() {
+        setQuestions(shuffle(QUIZ_RAW).map(q => {
+          const indices = q.opts.map((_, i) => i);
+          const shuffled = shuffle(indices);
+          return { ...q, shuffledOpts: shuffled.map(i => q.opts[i]), correctShuffled: shuffled.indexOf(q.correct) };
+        }));
+        setIndex(0);
+        setSelected(null);
+        setScore(0);
+        setPhase('playing');
+      }
+
+      // ─── Result screen ───
+      if (phase === 'result') {
+        const pct = Math.round((score / total) * 100);
+        let msg, msgColor, emoji;
+        if (pct === 100)     { msg = '¡Puntuación perfecta! Dominas el tema.'; msgColor = 'text-turquoise-dark'; emoji = '🏆'; }
+        else if (pct >= 80)  { msg = '¡Excelente! Estás casi lista para el examen.'; msgColor = 'text-turquoise'; emoji = '🌟'; }
+        else if (pct >= 60)  { msg = 'Bien, pero repasa los fallos antes del examen.'; msgColor = 'text-ochre-dark'; emoji = '💪'; }
+        else if (pct >= 40)  { msg = 'Necesitas repasar bastante. ¡Usa las fichas!'; msgColor = 'text-volcanic'; emoji = '📖'; }
+        else                 { msg = 'Toca estudiar a fondo. Lee La Historia y vuelve.'; msgColor = 'text-terracotta'; emoji = '🔄'; }
+
+        return (
+          <div className="page-enter max-w-md mx-auto text-center">
+            <span className="text-5xl block mb-4">{emoji}</span>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-tierra-charcoal mb-2">
+              {score} de {total}
+            </h2>
+            <p className="font-body text-tierra-slate mb-6">{pct}% de aciertos</p>
+
+            <div className="w-full h-3 bg-tierra-sand rounded-full overflow-hidden mb-4">
+              <div className="h-full bg-turquoise rounded-full transition-all" style={{ width: `${pct}%` }} />
+            </div>
+            <p className={`font-display text-lg font-semibold ${msgColor} mb-8`}>{msg}</p>
+
+            <button
+              onClick={restart}
+              className="px-8 py-3.5 bg-petrol text-white font-body font-semibold rounded-xl hover:bg-petrol-dark transition-colors cursor-pointer"
+            >
+              Intentar de nuevo
+            </button>
+          </div>
+        );
+      }
+
+      // ─── Question screen ───
+      return (
+        <div className="page-enter max-w-lg mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-tierra-charcoal">Quiz</h2>
+            <span className="font-display text-lg font-semibold text-turquoise-dark">
+              {index + 1}<span className="text-tierra-slate/50">/{total}</span>
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full h-1.5 bg-tierra-sand rounded-full overflow-hidden mb-8">
+            <div
+              className="h-full bg-turquoise rounded-full transition-all duration-300"
+              style={{ width: `${(index / total) * 100}%` }}
+            />
+          </div>
+
+          {/* Score pill */}
+          <div className="flex justify-end mb-4">
+            <span className="font-body text-sm text-tierra-slate bg-tierra-cream px-3 py-1 rounded-full">
+              Aciertos: <span className="font-semibold text-turquoise-dark">{score}</span>
+            </span>
+          </div>
+
+          {/* Question */}
+          <div className="mb-6">
+            <p className="font-body text-xl md:text-2xl text-tierra-charcoal leading-relaxed">
+              {current.q}
+            </p>
+          </div>
+
+          {/* Options */}
+          <div className="space-y-3 mb-6">
+            {current.shuffledOpts.map((opt, i) => {
+              let style = 'bg-white border-tierra-sand hover:border-ochre/50 cursor-pointer';
+              if (answered) {
+                if (i === current.correctShuffled) {
+                  style = 'bg-turquoise/10 border-turquoise ring-2 ring-turquoise/30';
+                } else if (i === selected && !isCorrect) {
+                  style = 'bg-terracotta/10 border-terracotta ring-2 ring-terracotta/30';
+                } else {
+                  style = 'bg-white border-tierra-sand opacity-50';
+                }
+              } else if (i === selected) {
+                style = 'bg-ochre/10 border-ochre';
+              }
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => selectOption(i)}
+                  disabled={answered}
+                  className={`w-full text-left px-5 py-4 border-2 rounded-xl font-body text-base transition-all ${style}`}
+                >
+                  <span className="font-semibold text-tierra-slate mr-2">
+                    {String.fromCharCode(65 + i)}.
+                  </span>
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Feedback */}
+          {answered && (
+            <div className={`p-4 rounded-xl mb-6 ${isCorrect ? 'bg-turquoise/10' : 'bg-terracotta/10'}`}>
+              <p className={`font-body text-sm font-semibold mb-1 ${isCorrect ? 'text-turquoise-dark' : 'text-terracotta-dark'}`}>
+                {isCorrect ? '¡Correcto!' : 'Incorrecto'}
+              </p>
+              <p className="font-body text-sm text-tierra-charcoal leading-relaxed">
+                {current.exp}
+              </p>
+            </div>
+          )}
+
+          {/* Next button */}
+          {answered && (
+            <button
+              onClick={next}
+              className="w-full py-3.5 bg-petrol text-white font-body font-semibold rounded-xl hover:bg-petrol-dark transition-colors cursor-pointer"
+            >
+              {index + 1 < total ? 'Siguiente pregunta' : 'Ver resultado'}
+            </button>
+          )}
+        </div>
+      );
+    }
+
     // ─── Placeholder pages ───
     function PlaceholderPage({ tab }) {
       const colors = {
@@ -757,7 +953,7 @@
           case 'mapa':     return <PlaceholderPage tab="mapa" />;
           case 'historia': return <Historia />;
           case 'fichas':   return <Fichas />;
-          case 'quiz':     return <PlaceholderPage tab="quiz" />;
+          case 'quiz':     return <Quiz />;
           default:         return null;
         }
       }, [activeTab]);
